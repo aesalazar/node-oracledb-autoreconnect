@@ -1,5 +1,5 @@
 {
-  "name": "node-oracledb-autoreconnect",
+  "name": "oracledb-autoreconnect",
   "version": "1.0.0",
   "description": "Autoreconnect for Oracle official NodeJS driver.",
   "main": "oracledb-autoreconnect.js",
