@@ -1,7 +1,7 @@
 {
   "name": "node-oracledb-autoreconnect",
   "version": "1.0.0",
-  "description": "Wrapper for Oracle official NodeJS driver with autoreconnection feature.",
+  "description": "Autoreconnect for Oracle official NodeJS driver.",
   "main": "oracledb-autoreconnect.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

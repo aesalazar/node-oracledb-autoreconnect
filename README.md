@@ -1,20 +1,20 @@
 Autoreconnect for [Oracle official NodeJS driver](https://github.com/oracle/node-oracledb)
 =================================================
 
-__This library is wrapper with aditional features, that uses [Oracle official NodeJS driver](https://github.com/oracle/node-oracledb) on background.__
+__This library is wrapper with additional features, that uses [Oracle official NodeJS driver](https://github.com/oracle/node-oracledb) on background.__
 
-Aditional features
+Additional features
 ------------------
 
 - __Auto-connect__. So just call sql query and does not care of anything else. 
 - __Auto-reconnect__ if connection get lost.
-- __Promisies__, that official driver doesn't use. :-(
+- __Promises__, that official driver don't have. :-)
 
 
 Installation
 ------------
 
-Becasuse this small library is only wrapper for [Oracle official NodeJS driver](https://github.com/oracle/node-oracledb), so please read [Installing node-oracledb](https://github.com/oracle/node-oracledb/blob/master/INSTALL.md) instructions. 
+Because this small library is only wrapper for [Oracle official NodeJS driver](https://github.com/oracle/node-oracledb), so please read [Installing node-oracledb](https://github.com/oracle/node-oracledb/blob/master/INSTALL.md) instructions. 
 
 
 Example using library
@@ -72,7 +72,7 @@ If DB is connected, but connection is lost (connection timeout), method will aut
 ### function oracleConnect()
 
 Manual create connection to Oracle server. If already connected to server, it does NOT connect second one, but use the first one.
-NOTE: In commom use in not neccessary to call.
+NOTE: In common use in not necessary to call.
 
 * `@returns {Promise} - Oracledb connection object of official Oracledb driver`
 
@@ -81,6 +81,6 @@ NOTE: In commom use in not neccessary to call.
 
 Manual disconnect from DB.
 
-NOTE: In commom use in not neccessary to call.
+NOTE: In common use in not necessary to call.
 
 * `@returns {Promise}`

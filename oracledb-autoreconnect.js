@@ -39,7 +39,7 @@ var oracleConnectionDefer = null;
 
 /**
  * Manual create connection to Oracle server. If already connected to server, it does NOT connect second one, but use the first one.
- * NOTE: In commom use in not neccessary to call.
+ * NOTE: In common use in not necessary to call.
  *
  * @returns {Promise} Oracledb connection object of official Oracledb driver
  */
@@ -70,7 +70,7 @@ function oracleConnect() {
 
 /**
  * Manual disconnect from DB.
- * NOTE: In commom use in not neccessary to call.
+ * NOTE: In common use in not necessary to call.
  * @returns {Promise}
  */
 function oracleDisconnect() {
