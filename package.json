@@ -1,0 +1,32 @@
+{
+  "name": "node-oracledb-autoreconnect",
+  "version": "1.0.0",
+  "description": "Wrapper for Oracle official NodeJS driver with autoreconnection feature.",
+  "main": "oracledb-autoreconnect.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ma-zal/node-oracledb-autoreconnect.git"
+  },
+  "keywords": [
+    "NodeJS",
+    "Node",
+    "Oracle",
+    "OracleDB",
+    "autoreconnect",
+    "reconnect",
+    "promise"
+  ],
+  "author": "Martin Zaloudek, CZ",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ma-zal/node-oracledb-autoreconnect/issues"
+  },
+  "homepage": "https://github.com/ma-zal/node-oracledb-autoreconnect#readme",
+  "dependencies": {
+    "oracledb": "^1.2.0",
+    "q": "^1.4.1"
+  }
+}
