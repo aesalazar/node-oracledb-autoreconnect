@@ -22,7 +22,7 @@ Example using library
 
     // Include this library
     
-    var db = require('oracledb-autoconnect');
+    var db = require('oracledb-autoreconnect');
 
 
     // Set connection parameters on application init.
@@ -37,10 +37,15 @@ Example using library
     // Just make query anytime.
     // Don't care about connect to db. It is solved automatically.
 
-    var query = "SELECT id, firstname, lastname FROM db.persons WHERE firstname LIKE :1 AND lastname LIKE :2";
+    var queryString = "SELECT id, firstname, lastname FROM db.persons WHERE firstname LIKE :1 AND lastname LIKE :2";
     var queryParams = ["John","Brown"];
-    db.oracleQuery(query, queryParams).then(function (dbResult) {
-        dbResult.map(function(person) {
+    db.query(queryString, queryParams).then(function (dbResult) {
+    
+        // Convert result to better structured object
+        var assocDbResult = db.transformToAssociated(dbResult);
+        
+        // Print results to console
+        assocDbResult.map(function(person) {
             console.log(person.firstname + " " + person.lastname + " has id " + person.id);
         });
     });
@@ -49,7 +54,7 @@ Example using library
 API of library
 --------------
 
-### function setOracleConnection(oracledbConnectionObject)
+### function setConnection(oracledbConnectionObject)
 
 Configuration of server connection parameters and credentials for future use in autoconnection/reconnection.
 
@@ -58,7 +63,7 @@ Note: Object with parameters will be pushed directly into Oracle library into of
 * `@returns {undefined} - Does return nothing`
 
 
-### function oracleQuery(query, queryParams)
+### function query(query, queryParams)
 
 Makes SQL query with autoconnection and reconnection on error
 If oracle DB is not connected yet, method will try to connect automatically.
@@ -68,8 +73,28 @@ If DB is connected, but connection is lost (connection timeout), method will aut
 * `@param {Array} queryParams - Array of values to SQL query`
 * `@returns {Promise} - Result of SQL query`
 
+### function transformToAssociated(sqlResult);
 
-### function oracleConnect()
+Converts common SQL SELECT result into Array of rows with associated column names.
+
+Example:
+
+    Input:
+    {
+        metaData: [{name:"ID"},{name:"FIRSTNAME"}],
+        rows: [[1, "JOHN"],[2,"JARYN"]]
+    }
+    Converted output:
+    [
+        {"ID":1, "FIRSTNAME":"JOHN"}
+        {"ID":2, "FIRSTNAME":"JARYN"}
+    ]
+    
+* `@param {Object} sqlSelectResult`
+* `@returns {Array.<Object.<string,*>>}`
+
+
+### function connect()
 
 Manual create connection to Oracle server. If already connected to server, it does NOT connect second one, but use the first one.
 NOTE: In common use in not necessary to call.
@@ -77,7 +102,7 @@ NOTE: In common use in not necessary to call.
 * `@returns {Promise} - Oracledb connection object of official Oracledb driver`
 
 
-### function oracleDisconnect()
+### function disconnect()
 
 Manual disconnect from DB.
 

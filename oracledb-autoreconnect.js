@@ -9,7 +9,6 @@
  *     - Using promisies
  * =======================================================================================
  * @author Martin Zaloudek, CZ
- * @
  * @module ma-zal/node-oracledb-autoreconnect
  */
 
@@ -18,10 +17,11 @@ var Q = require('q');
 var oracle = require('oracledb');
 
 /** Public API of module */
-module.exports.setOracleConnection = setOracleConnection;
-module.exports.oracleQuery = oracleQuery;
-module.exports.oracleConnect = oracleConnect;
-module.exports.oracleDisconnect = oracleDisconnect;
+module.exports.setConnection = setConnection;
+module.exports.query = query;
+module.exports.connect = connect;
+module.exports.disconnect = disconnect;
+module.exports.transformToAssociated = transformToAssociated;
 
 /**
  * Current connection to Oracle DB
@@ -43,7 +43,7 @@ var oracleConnectionDefer = null;
  *
  * @returns {Promise} Oracledb connection object of official Oracledb driver
  */
-function oracleConnect() {
+function connect() {
 	if (oracleConnectionDefer === null) {
 		// disconnected. Connection is not in progress, so try to connect.
 		oracleConnectionDefer = Q.defer();
@@ -53,7 +53,7 @@ function oracleConnect() {
 				// Connection failed
 				console.log("Error DB connecting: ", (err ? (err.message || err) : "no error message"));
 				oracleConnection = null;
-				oracleConnectionDefer.reject('#ERR_OCI_CONNECT');
+				oracleConnectionDefer.reject(err && err.message ? err.message : err);
 				oracleConnectionDefer = null;
 			} else {
 
@@ -73,7 +73,7 @@ function oracleConnect() {
  * NOTE: In common use in not necessary to call.
  * @returns {Promise}
  */
-function oracleDisconnect() {
+function disconnect() {
 	var oracleDisconnectionDefer = Q.defer();
 	if (oracleConnection !== null) {
 		oracleConnection.release(function (err) {
@@ -96,7 +96,7 @@ function oracleDisconnect() {
  *
  * @param {OracleConnParams} _oracleConnParams
  */
-function setOracleConnection(_oracleConnParams) {
+function setConnection(_oracleConnParams) {
 	oracleConnParams = _oracleConnParams;
 }
 
@@ -116,9 +116,9 @@ var oracleConnParams = null;
  * @param {Array} queryParams - Array of values to SQL query
  * @returns {Promise} Result of SQL query
  */
-function oracleQuery(query, queryParams) {
+function query(query, queryParams) {
 
-	return oracleConnect(oracleConnParams).then(function (oracleConnection) {
+	return connect(oracleConnParams).then(function (oracleConnection) {
 		var defer = Q.defer();
 		oracleConnection.execute(query, queryParams,
 			function (err, dbRes) {
@@ -138,19 +138,19 @@ function oracleQuery(query, queryParams) {
 						// existing connection is not active yet. Change state to disable
 						console.info('Oracle connection lost. Trying to reconnect.');
 
-						oracleDisconnect.then(function () {
+						disconnect.then(function () {
 							// Second try to connect and send sql query
-							return oracleQuery(query, queryParams);
+							return query(query, queryParams);
 						}).then(function (result) {
 							defer.resolve(result);
 						}).catch(function (err) {
-							defer.reject(err);
+							defer.reject(err && err.message ? err.message : err);
 						});
 
 					} else {
 						// Unknown error. Close this non-working connection and reject query
-						oracleDisconnect();
-						defer.reject('#ERR_OCI_QUERY');
+						disconnect();
+						defer.reject(err);
 					}
 					return;
 				}
@@ -160,6 +160,36 @@ function oracleQuery(query, queryParams) {
 			});
 		return defer.promise;
 	});
+}
+
+/**
+ * Converts common SQL SELECT result into Array of rows with associated column names.
+ * Example:
+ *     Input:
+ *     {
+ *         metaData: [{name:"ID"},{name:"FIRSTNAME"}],
+ *         rows: [[1, "JOHN"],[2,"JARYN"]]
+ *     }
+ *     Converted output:
+ *     [
+ *         {"ID":1, "FIRSTNAME":"JOHN"}
+ *         {"ID":2, "FIRSTNAME":"JARYN"}
+ *     ]
+ *
+ * @param {Object} sqlSelectResult
+ * @returns {Array.<Object.<string, *>>}
+ */
+function transformToAssociated(sqlSelectResult) {
+	var assocRows = [];
+	var i, l = sqlSelectResult.metaData.length;
+	sqlSelectResult.rows.map(function(row) {
+		var assocRow = {};
+		for (i=0; i<l; i++) {
+			assocRow[sqlSelectResult.metaData[i].name] = row[i];
+		}
+		assocRows.push(assocRow);
+	});
+	return assocRows;
 }
 
 /**
