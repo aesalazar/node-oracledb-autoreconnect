@@ -14,7 +14,14 @@ Additional features
 Installation
 ------------
 
-Because this small library is only wrapper for [Oracle official NodeJS driver](https://github.com/oracle/node-oracledb), so please read [Installing node-oracledb](https://github.com/oracle/node-oracledb/blob/master/INSTALL.md) instructions. 
+    npm install oracledb-autoreconnect
+
+Installation Prerequires
+------------------------
+
+Because this small library is only wrapper for [Oracle official NodeJS driver](https://github.com/oracle/node-oracledb), so please read [Installing node-oracledb](https://github.com/oracle/node-oracledb#-3-installation) or [Installing node-oracledb - extended version](https://github.com/oracle/node-oracledb/blob/master/INSTALL.md).
+ 
+NOTE: If you will have some issues, try (as test) install `npm install oracledb` and solve, why it fails.
 
 
 Example using library
