@@ -22,12 +22,12 @@ Example using library
 
     // Include this library
     
-    var oracledbWrapper = require('oracledb-autoconnect');
+    var db = require('oracledb-autoconnect');
 
 
     // Set connection parameters on application init.
 
-    oracledbWrapper.setConnection({
+    db.setConnection({
         user          : "hr",
         password      : "welcome",
         connectString : "localhost/XE"
@@ -37,11 +37,11 @@ Example using library
     // Just make query anytime.
     // Don't care about connect to db. It is solved automatically.
 
-    var query = "select ID, FIRSTNAME, LASTNAME FROM db.persons " WHERE FIRSTNAME LIKE :1 AND LASTNAME LIKE :2";
+    var query = "SELECT id, firstname, lastname FROM db.persons WHERE firstname LIKE :1 AND lastname LIKE :2";
     var queryParams = ["John","Brown"];
-    oracledbWrapper.oracleQuery(query, usernames521).then(function (dbResult) {
+    db.oracleQuery(query, queryParams).then(function (dbResult) {
         dbResult.map(function(person) {
-            console.log(person.FIRSTNAME + " " + person.LASTNAME + " has ID " + person.ID);
+            console.log(person.firstname + " " + person.lastname + " has id " + person.id);
         });
     });
 
