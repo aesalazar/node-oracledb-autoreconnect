@@ -138,7 +138,7 @@ function query(query, queryParams) {
 						// existing connection is not active yet. Change state to disable
 						console.info('Oracle connection lost. Trying to reconnect.');
 
-						disconnect.then(function () {
+						disconnect().then(function () {
 							// Second try to connect and send sql query
 							return query(query, queryParams);
 						}).then(function (result) {
