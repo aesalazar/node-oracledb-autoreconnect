@@ -1,6 +1,6 @@
 {
   "name": "oracledb-autoreconnect",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Autoreconnect for Oracle official NodeJS driver.",
   "main": "oracledb-autoreconnect.js",
   "scripts": {
@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/ma-zal/node-oracledb-autoreconnect#readme",
   "dependencies": {
-    "oracledb": "^1.2.0",
+    "oracledb": "~1",
     "q": "^1.4.1"
   }
 }
