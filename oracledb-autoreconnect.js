@@ -1,3 +1,5 @@
+/* global module */
+
 /**
  * =======================================================================================
  * Wrapper for Oracle official NodeJS driver {@see https://github.com/oracle/node-oracledb}
@@ -12,9 +14,10 @@
  * @module ma-zal/node-oracledb-autoreconnect
  */
 
-/** @type {Q} */
 var Q = require('q');
-var oracle = require('oracledb');
+/** @type {{getConnection:function}|*} */
+var oracledb = require('oracledb');
+
 
 /** Public API of module */
 module.exports.setConnection = setConnection;
@@ -23,19 +26,13 @@ module.exports.connect = connect;
 module.exports.disconnect = disconnect;
 module.exports.transformToAssociated = transformToAssociated;
 
-/**
- * Current connection to Oracle DB
- * @private
- * @static
- */
-var oracleConnection = null;
 
 /**
  * If connection is in progres, holds promise for this connection try
  * @private
- * @type {Defer|null}
+ * @type {Promise|null}
  */
-var oracleConnectionDefer = null;
+var oracleConnectionPromise = null;
 
 /**
  * Manual create connection to Oracle server. If already connected to server, it does NOT connect second one, but use the first one.
@@ -44,28 +41,21 @@ var oracleConnectionDefer = null;
  * @returns {Promise} Oracledb connection object of official Oracledb driver
  */
 function connect() {
-	if (oracleConnectionDefer === null) {
+	if (oracleConnectionPromise === null) {
 		// disconnected. Connection is not in progress, so try to connect.
-		oracleConnectionDefer = Q.defer();
-		oracle.getConnection(oracleConnParams, function (err, connection) {
-			if (err) {
-
-				// Connection failed
-				console.log("Error DB connecting: ", (err ? (err.message || err) : "no error message"));
-				oracleConnection = null;
-				oracleConnectionDefer.reject(err && err.message ? err.message : err);
-				oracleConnectionDefer = null;
-			} else {
-
-				// Connection successfull
-				oracleConnection = connection;
-				oracleConnectionDefer.resolve(oracleConnection);
-			}
+		var defer = Q.defer();
+		oracledb.getConnection(oracleConnParams, function(error, value) {
+			if (error) { defer.reject(error); } else { defer.resolve(value); }
+		});
+		oracleConnectionPromise = defer.promise.catch(function(err) {
+			// Connection failed
+			console.log("Error DB connecting: ", (err ? (err.message || err) : "no error message"));
+			oracleConnectionPromise = null;
+			return Q.reject(err && err.message ? err.message : err);
 		});
 
 	}
-
-	return oracleConnectionDefer.promise;
+	return oracleConnectionPromise;
 }
 
 /**
@@ -74,20 +64,20 @@ function connect() {
  * @returns {Promise}
  */
 function disconnect() {
-	var oracleDisconnectionDefer = Q.defer();
-	if (oracleConnection !== null) {
-		oracleConnection.release(function (err) {
-			if (err) {
-				oracleDisconnectionDefer.reject(err.message);
-				console.error('Oracle disconnect error: ', err.message);
-			}
-			oracleDisconnectionDefer.resolve();
-		});
+	if (oracleConnectionPromise === null) {
+		return Q.resolve();
 	}
-	oracleConnection = null;
-	oracleConnectionDefer = null;
-
-	return oracleDisconnectionDefer.promise;
+	return oracleConnectionPromise.then(function(/*OracleConnection*/ oracleConnection) {
+		oracleConnectionPromise = null;
+		var defer = Q.defer();
+		oracleConnection.release(function(error, value) {
+			if (error) { defer.reject(error); } else { defer.resolve(value); }
+		});
+		return defer.promise.catch(function (err) {
+			console.error('Oracle disconnect error: ', err.message);
+			return Q.reject(err.message);
+		});
+	});
 }
 
 /**
@@ -101,9 +91,9 @@ function setConnection(_oracleConnParams) {
 }
 
 /**
- * @type {OracleConnParams}
+ * @type {OracleConnParams|null}
  * @description Internal store of server connection parameters and credentials.
- * */
+ */
 var oracleConnParams = null;
 
 
@@ -112,53 +102,44 @@ var oracleConnParams = null;
  * If oracle DB is not connected yet, method will try to connect automatically.
  * If DB is connected, but connection is lost (connection timeout), method will automatically try to reconnect.
  *
- * @param {String} query - SQL query
+ * @param {string} sqlQuery - SQL query
  * @param {Array} queryParams - Array of values to SQL query
  * @returns {Promise} Result of SQL query
  */
-function query(query, queryParams) {
+function query(sqlQuery, queryParams) {
 
-	return connect(oracleConnParams).then(function (oracleConnection) {
+	return connect(oracleConnParams).then(function (/*OracleConnection*/ oracleConnection) {
 		var defer = Q.defer();
-		oracleConnection.execute(query, queryParams,
-			function (err, dbRes) {
-				if (err) {
-					// Some error
-					console.log("Error executing query: ", err.message);
-					if (oracleConnection !== null && err.message && err.message.match(/^ORA-(03114|03135|02396|01012)/)) {
-						// 'oracleConnection': If not null, it is first fail of previous connection.
-						//     If NULL, connection failed again (this is 3rd try to connect => don't try connect again, return error).
-						//
-						// Oracle errors:
-						//     ORA-03114: not connected to ORACLE
-						//     ORA-03135: connection lost contact
-						//     ORA-02396: exceeded maximum idle time, please connect again
-						//     ORA-01012: not logged on
+		oracleConnection.execute(sqlQuery, queryParams, function(error, value) {
+			if (error) { defer.reject(error); } else { defer.resolve(value); }
+		});
+		return defer.promise.catch(function(err) {
+			// Some error
+			console.log("Error executing query: ", err.message);
+			if (err.message && err.message.match(/^ORA-(03114|03135|02396|01012)/)) {
+				// Oracle errors:
+				//     ORA-03114: not connected to ORACLE
+				//     ORA-03135: connection lost contact
+				//     ORA-02396: exceeded maximum idle time, please connect again
+				//     ORA-01012: not logged on
 
-						// existing connection is not active yet. Change state to disable
-						console.info('Oracle connection lost. Trying to reconnect.');
+				// existing connection is not active yet. Change state to disable
+				console.info('Oracle connection lost. Trying to reconnect.');
 
-						disconnect().then(function () {
-							// Second try to connect and send sql query
-							return query(query, queryParams);
-						}).then(function (result) {
-							defer.resolve(result);
-						}).catch(function (err) {
-							defer.reject(err && err.message ? err.message : err);
-						});
+				return disconnect().then(function () {
+					// Second try to connect and send sql query
+					return query(sqlQuery, queryParams);
+				}).catch(function (err) {
+					return Q.reject(err && err.message ? err.message : err);
+				});
 
-					} else {
-						// Unknown error. Close this non-working connection and reject query
-						disconnect();
-						defer.reject(err);
-					}
-					return;
-				}
-
-				// Result OK
-				defer.resolve(dbRes);
-			});
-		return defer.promise;
+			} else {
+				// Unknown error. Close this non-working connection and reject query
+				return disconnect().finally(function () {
+					return Q.reject(err && err.message ? err.message : err);
+				});
+			}
+		});
 	});
 }
 
@@ -200,6 +181,7 @@ function transformToAssociated(sqlSelectResult) {
  */
 
 /**
- * @name Defer
- * @type {{reject:function, resolve:function, promise:Promise}}
+ * @typedef {Object} OracleConnection
+ * @property {function} execute
+ * @property {function} release
  */
