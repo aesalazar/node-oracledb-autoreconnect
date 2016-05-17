@@ -116,8 +116,9 @@ function query(sqlQuery, queryParams) {
 		return defer.promise.catch(function(err) {
 			// Some error
 			console.log("Error executing query: ", err.message);
-			if (err.message && err.message.match(/^ORA-(03114|03135|02396|01012)/)) {
+			if (err.message && err.message.match(/^ORA-(03113|03114|03135|02396|01012)/)) {
 				// Oracle errors:
+				//     ORA-03113: end-of-file on communication channel
 				//     ORA-03114: not connected to ORACLE
 				//     ORA-03135: connection lost contact
 				//     ORA-02396: exceeded maximum idle time, please connect again
