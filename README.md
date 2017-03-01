@@ -61,7 +61,7 @@ Example using library
 API of library
 --------------
 
-### function setConnection(oracledbConnectionObject)
+### function `setConnection(oracledbConnectionObject)`
 
 Configuration of server connection parameters and credentials for future use in autoconnection/reconnection.
 
@@ -70,7 +70,7 @@ Note: Object with parameters will be pushed directly into Oracle library into of
 * `@returns {undefined} - Does return nothing`
 
 
-### function query(query, queryParams)
+### function `query(query, queryParams)`
 
 Makes SQL query with autoconnection and reconnection on error
 If oracle DB is not connected yet, method will try to connect automatically.
@@ -80,7 +80,7 @@ If DB is connected, but connection is lost (connection timeout), method will aut
 * `@param {Array} queryParams - Array of values to SQL query`
 * `@returns {Promise} - Result of SQL query`
 
-### function transformToAssociated(sqlResult);
+### function `transformToAssociated(sqlResult)`
 
 Converts common SQL SELECT result into Array of rows with associated column names.
 
@@ -101,7 +101,7 @@ Example:
 * `@returns {Array.<Object.<string,*>>}`
 
 
-### function connect()
+### function `connect()`
 
 Manual create connection to Oracle server. If already connected to server, it does NOT connect second one, but use the first one.
 NOTE: In common use in not necessary to call.
@@ -109,10 +109,17 @@ NOTE: In common use in not necessary to call.
 * `@returns {Promise} - Oracledb connection object of official Oracledb driver`
 
 
-### function disconnect()
+### function `disconnect()`
 
 Manual disconnect from DB.
 
 NOTE: In common use in not necessary to call.
 
 * `@returns {Promise}`
+
+
+### object `oracledb`
+
+Exports the whole `oracledb` library.
+
+* `@type {object}`

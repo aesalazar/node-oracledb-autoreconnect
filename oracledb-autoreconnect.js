@@ -25,6 +25,7 @@ module.exports.query = query;
 module.exports.connect = connect;
 module.exports.disconnect = disconnect;
 module.exports.transformToAssociated = transformToAssociated;
+module.exports.oracledb = oracledb;
 
 
 /**
